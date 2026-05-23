@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Ventana de Johari · Carlota</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0D0F;--surface:#16161A;--surface2:#1E1E24;--border:#2A2A32;
+  --rose:#E8849A;--rose-dim:#9B4A5C;--rose-glow:rgba(232,132,154,0.18);
+  --gold:#D4A853;--gold-dim:#7A5C25;
+  --text:#F0EDE8;--text-muted:#7A7880;--text-dim:#4A4852;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 20% 10%,rgba(232,132,154,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%,rgba(212,168,83,0.06) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+
+/* WELCOME */
+#screen-welcome{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 28px;z-index:10;
+  text-align:center;animation:fadeIn .6s ease both;overflow-y:auto;}
+.welcome-tag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--rose);
+  font-weight:600;border:1px solid var(--rose-dim);border-radius:20px;padding:5px 16px;
+  margin-bottom:24px;display:inline-block;}
+.welcome-name{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,14vw,5rem);
+  font-weight:600;line-height:.95;letter-spacing:-1px;margin-bottom:8px;}
+.welcome-name em{font-style:italic;color:var(--rose);}
+.welcome-subtitle{font-size:13px;color:var(--text-muted);line-height:1.7;max-width:300px;margin:0 auto 8px;}
+.welcome-johari{font-size:11px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px;opacity:.8;}
+.welcome-msg{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--rose);
+  border-radius:12px;padding:16px 20px;font-size:13px;color:var(--text-muted);line-height:1.7;
+  max-width:380px;text-align:left;margin-bottom:32px;}
+.welcome-msg strong{color:var(--text);}
+.btn-start{background:var(--rose);color:#0D0D0F;border:none;border-radius:50px;padding:16px 48px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;letter-spacing:.3px;cursor:pointer;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 32px var(--rose-glow);}
+.btn-start:hover{transform:scale(1.05);box-shadow:0 0 48px rgba(232,132,154,0.3);}
+.btn-start:active{transform:scale(.97);}
+
+/* RATING */
+#screen-rating{position:fixed;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px 20px 32px;z-index:10;}
+.progress-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:20;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--rose-dim),var(--rose));
+  transition:width .5s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px var(--rose);border-radius:0 3px 3px 0;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;
+  width:100%;max-width:440px;margin-bottom:auto;padding-top:20px;}
+.aspect-counter{font-size:12px;color:var(--text-muted);letter-spacing:.5px;}
+.aspect-counter span{color:var(--rose);font-weight:600;}
+.top-logo{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--text-dim);
+  letter-spacing:2px;font-style:italic;}
+.card{width:100%;max-width:440px;flex:0 0 auto;position:relative;}
+.aspect-number{font-family:'Cormorant Garamond',serif;font-size:clamp(5rem,22vw,9rem);
+  font-weight:700;line-height:1;color:var(--border);position:absolute;top:-36px;right:-4px;
+  user-select:none;letter-spacing:-4px;}
+.aspect-question{font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--rose);font-weight:500;margin-bottom:10px;}
+.aspect-name{font-family:'Cormorant Garamond',serif;font-size:clamp(2.2rem,9vw,3.5rem);
+  font-weight:600;line-height:1.05;letter-spacing:-0.5px;margin-bottom:6px;
+  min-height:64px;display:flex;align-items:flex-end;}
+.aspect-hint{font-size:12px;color:var(--text-dim);margin-bottom:32px;line-height:1.5;min-height:30px;}
+.stars-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;justify-content:center;}
+.star-btn{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+  border:none;background:none;padding:0;-webkit-tap-highlight-color:transparent;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1);}
+.star-btn:active{transform:scale(.92);}
+.star-circle{width:clamp(44px,12vw,58px);height:clamp(44px,12vw,58px);border-radius:50%;
+  border:1.5px solid var(--border);background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(18px,5.5vw,24px);
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);}
+.star-btn.hovered .star-circle{border-color:var(--rose-dim);background:rgba(232,132,154,0.1);transform:scale(1.12);}
+.star-label{font-size:9px;letter-spacing:.5px;color:var(--text-dim);text-transform:uppercase;
+  white-space:nowrap;transition:color .2s;}
+.star-btn.hovered .star-label{color:var(--rose);}
+.scale-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;}
+.bottom-bar{width:100%;max-width:440px;margin-top:auto;padding-bottom:8px;}
+.prev-scores{display:flex;gap:6px;flex-wrap:wrap;min-height:28px;}
+.prev-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  padding:3px 10px;font-size:10px;color:var(--text-muted);animation:chipIn .3s ease both;}
+@keyframes chipIn{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+
+/* RESULT */
+#screen-result{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;
+  overflow-y:auto;padding:40px 20px 60px;z-index:10;animation:fadeIn .5s ease both;}
+.result-header{text-align:center;margin-bottom:28px;width:100%;max-width:500px;}
+.result-emoji{font-size:44px;margin-bottom:12px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;}
+.result-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;margin-bottom:6px;}
+.result-subtitle{font-size:13px;color:var(--text-muted);line-height:1.6;}
+.scores-grid{width:100%;max-width:500px;display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.score-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;animation:slideIn .4s ease both;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+.score-rank{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;
+  color:var(--text-dim);width:24px;text-align:right;flex-shrink:0;}
+.score-name{flex:1;font-size:13px;font-weight:500;color:var(--text);}
+.score-dots{display:flex;gap:3px;align-items:center;flex-shrink:0;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);}
+.dot.filled{background:var(--rose);}
+.dot.gold{background:var(--gold);}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;
+  color:var(--rose);width:22px;text-align:right;flex-shrink:0;}
+.score-num.high{color:var(--gold);}
+.summary-box{width:100%;max-width:500px;background:linear-gradient(135deg,var(--surface2),var(--surface));
+  border:1px solid var(--rose-dim);border-radius:16px;padding:18px 22px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.summary-label{font-size:11px;color:var(--text-muted);letter-spacing:.5px;}
+.summary-value{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:700;color:var(--rose);line-height:1;}
+.summary-max{font-size:12px;color:var(--text-dim);}
+.summary-avg{text-align:right;}
+.avg-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--gold);line-height:1;}
+.actions{width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;}
+.btn-pdf{padding:16px;background:var(--rose);color:#0D0D0F;border:none;border-radius:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;
+  box-shadow:0 0 24px var(--rose-glow);}
+.btn-pdf:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(232,132,154,.35);}
+.btn-wa{padding:16px;background:#25D366;color:white;border:none;border-radius:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;}
+.btn-wa:hover{background:#1ebe5b;transform:translateY(-2px);}
+.btn-redo{padding:14px;background:transparent;color:var(--text-muted);border:1px solid var(--border);
+  border-radius:14px;font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;}
+.btn-redo:hover{border-color:var(--rose);color:var(--rose);}
+
+/* Animations */
+.slide-out-left{animation:slideOutLeft .28s ease forwards;}
+.slide-in-right{animation:slideInRight .32s ease forwards;}
+@keyframes slideOutLeft{to{opacity:0;transform:translateX(-40px);}from{opacity:1;transform:translateX(0);}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes pop{from{transform:scale(0);}to{transform:scale(1);}}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="screen-welcome">
+  <div class="welcome-tag">Ventana de Johari</div>
+  <div class="welcome-name">Car<em>lota</em></div>
+  <div class="welcome-johari">Autoconocimiento · Percepción social</div>
+  <div class="welcome-subtitle">20 aspectos · Puntuación del 1 al 5</div>
+  <div class="welcome-msg">
+    <strong>Hola 💛</strong><br>
+    Tenéis que puntuarme del <strong>1 al 5</strong>, uno siendo <em>nada</em> y 5 siendo <em>mucho</em>.
+    Porfa es importante para mí — máxima sinceridad posible, es para un trabajo y sobretodo
+    para mí misma para ver cómo me veis las personas que me quieren y los menos allegados también.
+  </div>
+  <button class="btn-start" onclick="startRating()">Empezar a valorar &rarr;</button>
+</div>
+
+<!-- RATING -->
+<div id="screen-rating">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="top-bar">
+    <div class="aspect-counter">Aspecto <span id="current-num">1</span>&nbsp;de&nbsp;20</div>
+    <div class="top-logo">Carlota</div>
+  </div>
+  <div class="card" id="rating-card">
+    <div class="aspect-number" id="big-number">01</div>
+    <div class="aspect-question">Cuanto la describiria del 1 al 5</div>
+    <div class="aspect-name" id="aspect-name">Responsable</div>
+    <div class="aspect-hint" id="aspect-hint"></div>
+    <div class="stars-row" id="stars-row"></div>
+    <div class="scale-labels"><span>1 &middot; Nada</span><span>5 &middot; Mucho</span></div>
+  </div>
+  <div class="bottom-bar"><div class="prev-scores" id="prev-scores"></div></div>
+</div>
+
+<!-- RESULTS -->
+<div id="screen-result">
+  <div class="result-header">
+    <div class="result-emoji">&#10024;</div>
+    <div class="result-title">Valoración completa</div>
+    <div class="result-subtitle">Gracias por tu sinceridad &middot; Ventana de Johari de <strong>Carlota</strong></div>
+  </div>
+  <div class="summary-box">
+    <div>
+      <div class="summary-label">PUNTUACIÓN TOTAL</div>
+      <div class="summary-value" id="total-score">—</div>
+      <div class="summary-max">de 100 puntos</div>
+    </div>
+    <div class="summary-avg">
+      <div class="summary-label">MEDIA</div>
+      <div class="avg-num" id="avg-score">—</div>
+      <div class="summary-max">sobre 5</div>
+    </div>
+  </div>
+  <div class="scores-grid" id="scores-grid"></div>
+  <div class="actions">
+    <button class="btn-pdf" onclick="generatePDF()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+      </svg>
+      Descargar PDF
+    </button>
+    <button class="btn-wa" onclick="shareWhatsApp()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+      Compartir enlace por WhatsApp
+    </button>
+    <button class="btn-redo" onclick="restartAll()">Volver a puntuar desde el inicio</button>
+  </div>
+</div>
+
+<script>
+const ASPECTS=[
+  {name:"Responsable",hint:"Cumple sus compromisos y obligaciones"},
+  {name:"Madura",hint:"Actúa con sensatez y equilibrio emocional"},
+  {name:"Empatía",hint:"Comprende y conecta con los sentimientos ajenos"},
+  {name:"Sensible",hint:"Se afecta profundamente por las cosas y las personas"},
+  {name:"Valiente",hint:"Se enfrenta a sus miedos y situaciones difíciles"},
+  {name:"Trabajadora",hint:"Se esfuerza y es constante en lo que hace"},
+  {name:"Independiente",hint:"Se vale por sí misma y toma sus propias decisiones"},
+  {name:"Introvertida",hint:"Prefiere los espacios tranquilos y la introspección"},
+  {name:"Sociable",hint:"Disfruta relacionándose con los demás"},
+  {name:"Asertiva",hint:"Expresa sus opiniones con claridad y respeto"},
+  {name:"Insegura",hint:"Duda de sí misma o de sus capacidades"},
+  {name:"Organizada",hint:"Mantiene orden y planifica bien"},
+  {name:"Ambiciosa",hint:"Tiene metas claras y trabaja para alcanzarlas"},
+  {name:"Honesta",hint:"Dice la verdad y actúa con integridad"},
+  {name:"Líder",hint:"Inspira y guía a las personas de su entorno"},
+  {name:"Determinada",hint:"Persiste cuando se propone algo"},
+  {name:"Vulnerable",hint:"Muestra su lado más frágil y auténtico"},
+  {name:"Exigente consigo misma",hint:"Se pone el listón muy alto a sí misma"},
+  {name:"Impulsiva",hint:"Actúa a veces sin reflexionar antes"},
+  {name:"Tímida",hint:"Le cuesta abrirse o destacar en ciertos contextos"}
+];
+
+const EMOJIS=["😶","🙁","😐","😊","🤩"];
+const LINK=window.location.href;
+let currentIdx=0;
+const scores=[];
+let transitioning=false;
+
+function startRating(){
+  document.getElementById('screen-welcome').style.display='none';
+  const sr=document.getElementById('screen-rating');
+  sr.style.display='flex';
+  renderAspect(0,false);
+}
+
+function renderAspect(idx,animate){
+  currentIdx=idx;
+  const a=ASPECTS[idx];
+  document.getElementById('progress-fill').style.width=((idx/20)*100)+'%';
+  document.getElementById('current-num').textContent=idx+1;
+  const card=document.getElementById('rating-card');
+  if(animate){
+    card.classList.add('slide-in-right');
+    card.addEventListener('animationend',()=>card.classList.remove('slide-in-right'),{once:true});
+  }
+  document.getElementById('big-number').textContent=String(idx+1).padStart(2,'0');
+  document.getElementById('aspect-name').textContent=a.name;
+  document.getElementById('aspect-hint').textContent=a.hint;
+  buildStars();
+  updateChips();
+}
+
+function buildStars(){
+  const row=document.getElementById('stars-row');
+  row.innerHTML='';
+  for(let v=1;v<=5;v++){
+    const btn=document.createElement('button');
+    btn.className='star-btn';
+    btn.dataset.val=v;
+    btn.innerHTML=`<div class="star-circle">${EMOJIS[v-1]}</div><span class="star-label">${v}</span>`;
+    btn.addEventListener('mouseenter',()=>hlUpTo(v));
+    btn.addEventListener('mouseleave',()=>clrHL());
+    btn.addEventListener('click',()=>selectScore(v));
+    // touch
+    btn.addEventListener('touchend',(e)=>{e.preventDefault();selectScore(v);});
+    row.appendChild(btn);
+  }
+}
+
+function hlUpTo(val){
+  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('hovered',i<val));
+}
+function clrHL(){
+  document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('hovered'));
+}
+
+function updateChips(){
+  const c=document.getElementById('prev-scores');
+  c.innerHTML='';
+  scores.slice(-6).forEach((s,i)=>{
+    const ri=scores.length-Math.min(6,scores.length)+i;
+    const chip=document.createElement('div');
+    chip.className='prev-chip';
+    chip.textContent=ASPECTS[ri].name.split(' ')[0]+': '+s+'/5';
+    c.appendChild(chip);
+  });
+}
+
+function selectScore(val){
+  if(transitioning)return;
+  transitioning=true;
+  scores[currentIdx]=val;
+  const card=document.getElementById('rating-card');
+  card.classList.add('slide-out-left');
+  setTimeout(()=>{
+    card.classList.remove('slide-out-left');
+    if(currentIdx<19){renderAspect(currentIdx+1,true);transitioning=false;}
+    else{showResults();transitioning=false;}
+  },280);
+}
+
+function showResults(){
+  document.getElementById('screen-rating').style.display='none';
+  document.getElementById('progress-fill').style.width='100%';
+  const screen=document.getElementById('screen-result');
+  screen.style.display='flex';
+  const total=scores.reduce((a,b)=>a+b,0);
+  const avg=(total/20).toFixed(1);
+  document.getElementById('total-score').textContent=total;
+  document.getElementById('avg-score').textContent=avg;
+  const grid=document.getElementById('scores-grid');
+  grid.innerHTML='';
+  ASPECTS.forEach((a,i)=>{
+    const s=scores[i];const isHigh=s>=4;
+    const row=document.createElement('div');
+    row.className='score-row';
+    row.style.animationDelay=(i*0.035)+'s';
+    const dots=[1,2,3,4,5].map(n=>`<div class="dot${n<=s?(isHigh?' gold':' filled'):''}"></div>`).join('');
+    row.innerHTML=`<div class="score-rank">${i+1}</div>
+      <div class="score-name">${a.name}</div>
+      <div class="score-dots">${dots}</div>
+      <div class="score-num${isHigh?' high':''}">${s}</div>`;
+    grid.appendChild(row);
+  });
+}
+
+function generatePDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,pH=297,M=16,U=W-M*2;
+  const BG=[13,13,15],SURF=[22,22,26],S2=[30,30,38];
+  const ROSE=[232,132,154],GOLD=[212,168,83],TEXT=[240,237,232];
+  const MUTED=[122,120,128],BRD=[42,42,50];
+
+  // bg
+  doc.setFillColor(...BG);doc.rect(0,0,W,pH,'F');
+
+  // header
+  doc.setFillColor(...SURF);doc.roundedRect(M,10,U,46,4,4,'F');
+  doc.setFillColor(...ROSE);doc.roundedRect(M,10,3,46,2,2,'F');
+  doc.setDrawColor(...ROSE);doc.setLineWidth(0.5);doc.roundedRect(M,10,U,46,4,4,'S');
+
+  doc.setFont('helvetica','bold');doc.setFontSize(24);doc.setTextColor(...ROSE);
+  doc.text('CARLOTA',M+8,28);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...MUTED);
+  doc.text('Ventana de Johari · Valoración personal',M+8,36);
+  const fecha=new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+  doc.setFontSize(8);doc.text(fecha,W-M-2,20,{align:'right'});
+
+  // totals in header
+  const total=scores.reduce((a,b)=>a+b,0);
+  const avg=(total/20).toFixed(1);
+  doc.setFillColor(...S2);doc.roundedRect(W-M-40,11.5,37,43,3,3,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(28);doc.setTextColor(...ROSE);
+  doc.text(String(total),W-M-21.5,32,{align:'center'});
+  doc.setFontSize(7);doc.setTextColor(...MUTED);doc.text('de 100 puntos',W-M-21.5,38,{align:'center'});
+  doc.setFontSize(14);doc.setTextColor(...GOLD);doc.text('media '+avg,W-M-21.5,48,{align:'center'});
+
+  // scores list
+  let y=64;const RH=10.2,BX=M+U*0.58,BMAX=U*0.36;
+  doc.setFontSize(7);doc.setTextColor(...MUTED);
+  doc.text('#',M+1,y-2);doc.text('ASPECTO',M+8,y-2);
+  doc.text('PT',M+U*0.54,y-2,{align:'center'});
+  doc.text('VALORACIÓN',BX+BMAX/2,y-2,{align:'center'});
+  doc.setDrawColor(...BRD);doc.setLineWidth(0.25);doc.line(M,y,W-M,y);y+=0.5;
+
+  ASPECTS.forEach((a,i)=>{
+    const s=scores[i];const isHigh=s>=4;
+    if(i%2===0){doc.setFillColor(18,18,22);doc.rect(M,y,U,RH,'F');}
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...MUTED);
+    doc.text(String(i+1).padStart(2,'0'),M+2,y+7);
+    doc.setFont('helvetica',isHigh?'bold':'normal');doc.setFontSize(9);
+    doc.setTextColor(...(isHigh?GOLD:TEXT));
+    const nm=a.name.length>22?a.name.slice(0,21)+'…':a.name;
+    doc.text(nm,M+8,y+7);
+    doc.setFont('helvetica','bold');doc.setFontSize(13);
+    doc.setTextColor(...(isHigh?GOLD:ROSE));
+    doc.text(String(s),M+U*0.54,y+7.5,{align:'center'});
+    doc.setFillColor(...BRD);doc.roundedRect(BX,y+3.5,BMAX,3.8,1.5,1.5,'F');
+    doc.setFillColor(...(isHigh?GOLD:ROSE));
+    doc.roundedRect(BX,y+3.5,(s/5)*BMAX,3.8,1.5,1.5,'F');
+    doc.setDrawColor(...BRD);doc.setLineWidth(0.2);doc.line(M,y+RH,W-M,y+RH);
+    y+=RH;
+  });
+
+  y+=8;
+  // bar chart
+  if(y+72<pH-16){
+    doc.setFillColor(...SURF);doc.roundedRect(M,y,U,70,4,4,'F');
+    doc.setDrawColor(...BRD);doc.setLineWidth(0.3);doc.roundedRect(M,y,U,70,4,4,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...ROSE);
+    doc.text('RESUMEN VISUAL',M+6,y+8);
+    const cx=M+6,cw=U-12,ch=46,cy=y+14;
+    const bw=(cw/20)-1.8;
+    ASPECTS.forEach((a,i)=>{
+      const s=scores[i];const isHigh=s>=4;
+      const bx=cx+i*(bw+1.8);
+      const bh=(s/5)*ch;const by=cy+ch-bh;
+      doc.setFillColor(...BRD);doc.roundedRect(bx,cy,bw,ch,1,1,'F');
+      doc.setFillColor(...(isHigh?GOLD:ROSE));doc.roundedRect(bx,by,bw,bh,1,1,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(5.5);
+      doc.setTextColor(...(isHigh?GOLD:ROSE));
+      doc.text(String(s),bx+bw/2,by-1.5,{align:'center'});
+    });
+    doc.setFont('helvetica','normal');doc.setFontSize(4.5);doc.setTextColor(...MUTED);
+    ASPECTS.forEach((a,i)=>{
+      const bx=cx+i*(bw+1.8);
+      doc.text(a.name.charAt(0),bx+bw/2,cy+ch+5,{align:'center'});
+    });
+    y+=78;
+  }
+
+  // footer
+  doc.setFillColor(...SURF);doc.rect(0,pH-14,W,14,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...MUTED);
+  doc.text('Ventana de Johari · Carlota · '+fecha,W/2,pH-5,{align:'center'});
+
+  doc.save('Johari_Carlota_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+function shareWhatsApp(){
+  const total=scores.reduce((a,b)=>a+b,0);
+  const avg=(total/20).toFixed(1);
+  const lines=ASPECTS.map((a,i)=>{
+    const s=scores[i];
+    return String(i+1).padStart(2,'0')+'. '+a.name+': '+'★'.repeat(s)+'☆'.repeat(5-s)+' ('+s+'/5)';
+  }).join('\n');
+  const msg='✨ Mi valoración de la Ventana de Johari de *Carlota*\n\n'+lines+'\n\n📊 Total: *'+total+'/100* · Media: *'+avg+'/5*\n\n¿Tú también quieres valorarla? 👇\n'+LINK;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function restartAll(){
+  scores.length=0;currentIdx=0;
+  document.getElementById('screen-result').style.display='none';
+  document.getElementById('screen-welcome').style.display='flex';
+}
+</script>
+</body>
+</html>
